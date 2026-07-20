@@ -1,0 +1,27 @@
+{
+  "name": "storyforge-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:unit": "pnpm --filter @storyforge/agent-core test:unit",
+    "test:integration": "pnpm --filter @storyforge/agent-core test:integration",
+    "test:e2e": "pnpm --filter @storyforge/web test:e2e",
+    "eval": "tsx evals/run-evals.ts",
+    "lint": "turbo run lint",
+    "skill:compile": "pnpm --filter @storyforge/agent-core skill:compile",
+    "skill:validate": "tsx packages/agent-core/scripts/validate-skill.ts"
+  },
+  "devDependencies": {
+    "@storyforge/agent-core": "workspace:*",
+    "@storyforge/contracts": "workspace:*",
+    "tsx": "latest",
+    "turbo": "latest",
+    "typescript": "latest"
+  }
+}

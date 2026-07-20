@@ -1,0 +1,14 @@
+[
+  { "id": "narrative-vertical", "category": "短剧", "duration": 90, "prompt": "一名深夜代驾发现每位乘客都来自同一天的不同时间，竖屏悬疑短剧" },
+  { "id": "product-ad", "category": "广告", "duration": 30, "prompt": "为便携式户外咖啡机制作一条突出升温速度、重量和露营使用场景的广告" },
+  { "id": "fantasy-mv", "category": "MV", "duration": 120, "prompt": "原创奇幻世界 MV，展示人类魔法、六族城市、贸易、美食、农业和飞行交通" },
+  { "id": "game-trailer", "category": "预告片", "duration": 60, "prompt": "合作解谜游戏预告片，两名玩家必须在不同季节的同一座城中相互留下线索" },
+  { "id": "city-promo", "category": "宣传片", "duration": 45, "prompt": "海边工业城市更新宣传片，突出老船厂改造、社区生活与青年创意产业" },
+  { "id": "documentary", "category": "纪录片", "duration": 180, "prompt": "微型纪录片，跟随一名山村木匠从选木到完成一把传统椅子" },
+  { "id": "tutorial", "category": "教程", "duration": 75, "prompt": "零基础手机拍摄教程，讲清楚自然光、人像构图和稳定运镜" },
+  { "id": "explainer", "category": "解释视频", "duration": 50, "prompt": "用通俗动画解释电网如何在用电高峰维持供需平衡" },
+  { "id": "brand-story", "category": "品牌故事", "duration": 90, "prompt": "一家循环材料工作室把废弃渔网变成家具的品牌故事" },
+  { "id": "social-comedy", "category": "社交短视频", "duration": 25, "prompt": "办公室喜剧，一个新人误以为所有会议邀请都是密室逃脱线索" },
+  { "id": "food-film", "category": "美食片", "duration": 40, "prompt": "从凌晨备料到清晨开门，展示一家街角面馆的声音、蒸汽和人情" },
+  { "id": "sci-fi-world", "category": "世界观视频", "duration": 120, "prompt": "太阳风暴后的轨道城市，人类、合成人与微重力植物共同维护最后一座太空港" }
+]

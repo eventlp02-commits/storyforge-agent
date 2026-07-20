@@ -1,0 +1,28 @@
+{
+  "name": "@storyforge/agent-core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "pnpm skill:compile && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run tests",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "lint": "tsc --noEmit",
+    "skill:compile": "tsx scripts/compile-skill.ts"
+  },
+  "dependencies": {
+    "@openai/agents": "latest",
+    "@storyforge/contracts": "workspace:*",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsx": "latest",
+    "vitest": "latest"
+  }
+}
