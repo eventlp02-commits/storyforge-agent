@@ -1,0 +1,158 @@
+{
+  "summary": {
+    "generatedAt": "2026-07-20T11:27:15.289Z",
+    "cases": 12,
+    "schemaPassRate": 1,
+    "timingPassRate": 1,
+    "assetReferencePassRate": 1,
+    "averageQaScore": 96,
+    "p95LatencyMs": 4.9,
+    "totalCostUsd": 0
+  },
+  "rows": [
+    {
+      "id": "narrative-vertical",
+      "category": "短剧",
+      "schemaValid": true,
+      "timingValid": true,
+      "timingDifference": 0,
+      "unresolvedAssets": 0,
+      "qaScore": 96,
+      "eventCount": 22,
+      "latencyMs": 4.9,
+      "costUsd": 0
+    },
+    {
+      "id": "product-ad",
+      "category": "广告",
+      "schemaValid": true,
+      "timingValid": true,
+      "timingDifference": 0,
+      "unresolvedAssets": 0,
+      "qaScore": 96,
+      "eventCount": 22,
+      "latencyMs": 0.3,
+      "costUsd": 0
+    },
+    {
+      "id": "fantasy-mv",
+      "category": "MV",
+      "schemaValid": true,
+      "timingValid": true,
+      "timingDifference": 0,
+      "unresolvedAssets": 0,
+      "qaScore": 96,
+      "eventCount": 22,
+      "latencyMs": 0.24,
+      "costUsd": 0
+    },
+    {
+      "id": "game-trailer",
+      "category": "预告片",
+      "schemaValid": true,
+      "timingValid": true,
+      "timingDifference": 0,
+      "unresolvedAssets": 0,
+      "qaScore": 96,
+      "eventCount": 22,
+      "latencyMs": 0.18,
+      "costUsd": 0
+    },
+    {
+      "id": "city-promo",
+      "category": "宣传片",
+      "schemaValid": true,
+      "timingValid": true,
+      "timingDifference": 0,
+      "unresolvedAssets": 0,
+      "qaScore": 96,
+      "eventCount": 22,
+      "latencyMs": 0.25,
+      "costUsd": 0
+    },
+    {
+      "id": "documentary",
+      "category": "纪录片",
+      "schemaValid": true,
+      "timingValid": true,
+      "timingDifference": 0,
+      "unresolvedAssets": 0,
+      "qaScore": 96,
+      "eventCount": 22,
+      "latencyMs": 0.25,
+      "costUsd": 0
+    },
+    {
+      "id": "tutorial",
+      "category": "教程",
+      "schemaValid": true,
+      "timingValid": true,
+      "timingDifference": 0,
+      "unresolvedAssets": 0,
+      "qaScore": 96,
+      "eventCount": 22,
+      "latencyMs": 0.16,
+      "costUsd": 0
+    },
+    {
+      "id": "explainer",
+      "category": "解释视频",
+      "schemaValid": true,
+      "timingValid": true,
+      "timingDifference": 0,
+      "unresolvedAssets": 0,
+      "qaScore": 96,
+      "eventCount": 22,
+      "latencyMs": 0.14,
+      "costUsd": 0
+    },
+    {
+      "id": "brand-story",
+      "category": "品牌故事",
+      "schemaValid": true,
+      "timingValid": true,
+      "timingDifference": 0,
+      "unresolvedAssets": 0,
+      "qaScore": 96,
+      "eventCount": 22,
+      "latencyMs": 0.15,
+      "costUsd": 0
+    },
+    {
+      "id": "social-comedy",
+      "category": "社交短视频",
+      "schemaValid": true,
+      "timingValid": true,
+      "timingDifference": 0,
+      "unresolvedAssets": 0,
+      "qaScore": 96,
+      "eventCount": 22,
+      "latencyMs": 0.15,
+      "costUsd": 0
+    },
+    {
+      "id": "food-film",
+      "category": "美食片",
+      "schemaValid": true,
+      "timingValid": true,
+      "timingDifference": 0,
+      "unresolvedAssets": 0,
+      "qaScore": 96,
+      "eventCount": 22,
+      "latencyMs": 0.12,
+      "costUsd": 0
+    },
+    {
+      "id": "sci-fi-world",
+      "category": "世界观视频",
+      "schemaValid": true,
+      "timingValid": true,
+      "timingDifference": 0,
+      "unresolvedAssets": 0,
+      "qaScore": 96,
+      "eventCount": 22,
+      "latencyMs": 0.15,
+      "costUsd": 0
+    }
+  ]
+}
