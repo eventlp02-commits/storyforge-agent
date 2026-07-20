@@ -44,7 +44,7 @@ function qaMarkdown(project: ProjectSnapshot): string {
 }
 
 export function buildTextExports(project: ProjectSnapshot): Record<string, string> {
-  const shotHeaders = ["镜头ID", "开始秒", "结束秒", "时长秒", "场景", "景别", "机位运动", "动作", "对白", "声音", "转场", "资产编号", "生成状态"];
+  const shotHeaders = ["镜头ID", "开始秒", "结束秒", "时长秒", "场景", "景别", "机位运动", "动作", "对白", "声音", "转场", "资产编号", "生成状态", "媒体供应商", "供应商任务ID", "媒体文件"];
   const shotRows = project.shots.map((shot) => [
     shot.id,
     shot.start.toFixed(2),
@@ -59,6 +59,9 @@ export function buildTextExports(project: ProjectSnapshot): Record<string, strin
     shot.transition,
     shot.assetIds.join("|"),
     shot.generationStatus,
+    shot.mediaProvider,
+    shot.providerJobId,
+    shot.fileUrl,
   ].map(csvEscape).join(","));
   const assetHeaders = ["资产ID", "名称", "类型", "状态", "文件", "关联镜头", "提示词"];
   const assetRows = project.assets.map((asset) => [

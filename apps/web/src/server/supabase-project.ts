@@ -151,6 +151,9 @@ export function projectSnapshotFromSupabaseRows(rows: SupabaseProjectRows): Proj
     assetIds: stringArray(row.asset_ids),
     prompt: stringValue(row.prompt, "等待提示词阶段"),
     generationStatus: stringValue(row.generation_status, "ready") as Shot["generationStatus"],
+    ...(typeof row.media_url === "string" ? { fileUrl: row.media_url } : {}),
+    ...(typeof row.provider_job_id === "string" ? { providerJobId: row.provider_job_id } : {}),
+    ...(typeof row.media_provider === "string" ? { mediaProvider: row.media_provider } : {}),
   }));
 
   const assets: Asset[] = rows.assets.map((row) => ({

@@ -653,6 +653,35 @@ textarea:focus-visible,
   font-size: 10px;
 }
 
+.shot-heading {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.shot-heading h3 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shot-media-link {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+}
+
+.shot-provider {
+  overflow: hidden;
+  color: var(--muted);
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 8px !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .assets-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 260px;
@@ -939,7 +968,7 @@ textarea:focus-visible,
 .status-pill.completed, .status-pill.done { color: #0e655c; background: var(--teal-soft); }
 .status-pill.failed, .status-pill.cancelled { color: #9c3e2e; background: var(--coral-soft); }
 .status-pill.paused, .status-pill.waiting, .status-pill.prompt-only { color: #2d5f79; background: var(--blue-soft); }
-.status-pill.queued, .status-pill.planned { color: #59625d; background: #ecefec; }
+.status-pill.queued, .status-pill.planned, .status-pill.ready { color: #59625d; background: #ecefec; }
 
 .modal-backdrop {
   position: fixed;
@@ -999,7 +1028,7 @@ textarea:focus-visible,
 }
 
 .credential-modal {
-  max-width: 520px;
+  max-width: 760px;
 }
 
 .credential-form {
@@ -1044,6 +1073,127 @@ textarea:focus-visible,
   margin: 0;
   font-size: 10px;
   line-height: 1.55;
+}
+
+.provider-modal .modal-header > div span {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.provider-body {
+  min-height: 0;
+  padding: 16px;
+  overflow: auto;
+}
+
+.provider-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.provider-tabs button {
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--muted);
+  background: #f5f7f5;
+  border: 0;
+  border-right: 1px solid var(--line-strong);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.provider-tabs button:last-child { border-right: 0; }
+.provider-tabs button[aria-selected="true"] { color: white; background: var(--ink); }
+
+.provider-panel {
+  margin-top: 12px;
+}
+
+.provider-enable {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.provider-enable input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--teal);
+}
+
+.provider-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.provider-fields[aria-disabled="true"] { opacity: 0.48; }
+
+.provider-fields label {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.provider-fields label > span {
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.provider-fields input,
+.provider-fields select {
+  width: 100%;
+  height: 38px;
+  min-width: 0;
+  padding: 0 10px;
+  color: var(--ink);
+  background: white;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  outline: 0;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 10px;
+}
+
+.provider-fields select { font-family: inherit; }
+.provider-fields input:focus,
+.provider-fields select:focus { border-color: var(--teal); }
+.provider-wide { grid-column: 1 / -1; }
+
+.provider-description,
+.provider-run-id {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.provider-run-id {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-family: "SFMono-Regular", Consolas, monospace;
+}
+
+.provider-summary {
+  min-width: 0;
+  margin-right: auto;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .toast {
@@ -1155,4 +1305,9 @@ textarea:focus-visible,
   .asset-detail {
     position: static;
   }
+
+  .provider-modal { max-height: 92svh; }
+  .provider-fields { grid-template-columns: 1fr; }
+  .provider-wide { grid-column: auto; }
+  .provider-summary { display: none; }
 }

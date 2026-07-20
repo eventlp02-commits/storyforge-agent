@@ -4,7 +4,7 @@ StoryForge Agent 是一个把“一句话视频创意”自动整理成完整制
 
 用户不用先写需求文档。输入一句话后，系统会补全时长、画幅、语言和风格，依次完成创意简报、世界观、剧本、镜头时间线、资产规划、生成提示词、质量检查和文件导出。整个过程会在页面上实时展示，但不会泄露模型的隐藏推理。
 
-> 当前仓库自带原创《星脉之歌》无密钥演示。它不会调用付费 API，适合招聘方直接查看。真实运行无需 GitHub 登录，只需用户自己的 OpenAI API Key。
+> 当前仓库自带原创《星脉之歌》无密钥演示。它不会调用付费 API，适合招聘方直接查看。真实运行无需 GitHub 登录，用户可以接入自己的 LLM、图片和视频模型 API。
 
 ![StoryForge Agent 30 秒演示](docs/demo.gif)
 
@@ -84,8 +84,9 @@ flowchart LR
   API --> DB["Supabase PostgreSQL + RLS"]
   API --> TR["Trigger.dev"]
   TR --> DAG["StoryForge 固定 DAG"]
-  DAG --> SDK["OpenAI Agents SDK"]
-  DAG --> MEDIA["ImageProvider / VideoProvider"]
+  DAG --> HUB["Provider Hub"]
+  HUB --> SDK["OpenAI-compatible / Anthropic"]
+  HUB --> MEDIA["OpenAI Images / Replicate / fal / Runway"]
   SDK --> DB
   MEDIA --> STORE["Supabase Storage"]
   DB --> RT["Realtime 事件"]
@@ -101,9 +102,9 @@ sequenceDiagram
   participant W as Web
   participant D as Supabase
   participant T as Trigger.dev
-  participant A as Agents SDK
+  participant A as Provider Hub
   U->>W: 输入一句话并创建项目
-  U->>W: 提交一次性 API Key
+  U->>W: 选择供应商并提交一次性 API Key
   alt 已配置 Supabase 与 Trigger.dev
     W->>D: 匿名会话保存 project、run 与 AES-GCM 密文
     W->>T: 使用幂等键启动长任务
@@ -120,7 +121,7 @@ sequenceDiagram
 ## 技术栈
 
 - 前端：Next.js 16 App Router、React 19、TypeScript、Tailwind CSS、React Flow、Lucide
-- Agent：OpenAI Agents SDK TypeScript、Zod、代码控制 DAG、流式事件、敏感 trace 关闭
+- Agent：Provider Hub、OpenAI Agents SDK、Anthropic Messages、OpenAI-compatible Chat Completions、Zod、代码控制 DAG
 - 后台任务：Trigger.dev，支持断线恢复、重试、取消和幂等执行
 - 数据：本地内存运行，或 Supabase PostgreSQL、匿名 Auth、Storage、Realtime、RLS
 - 导出：JSZip、docx
@@ -168,19 +169,21 @@ pnpm skill:compile
 - 每次运行限制 Token、费用、图片数、视频秒数和自动重试次数。
 - 内容拒绝不会通过改写敏感词来规避审核。
 
-## 模型和媒体策略
+## Provider Hub
 
-环境变量控制模型路由：
+“连接模型”不是一个写死的 OpenAI 输入框。LLM、图片和视频可以分别选择供应商、模型、Base URL 和 API Key：
 
-```text
-STORYFORGE_CREATIVE_MODEL=gpt-5.6-terra
-STORYFORGE_UTILITY_MODEL=gpt-5.6-luna
-STORYFORGE_QUALITY_MODEL=gpt-5.6-sol
-STORYFORGE_IMAGE_MODEL=gpt-image-2
-STORYFORGE_VIDEO_ENABLED=false
-```
+| 类型 | 内置接入 |
+|---|---|
+| LLM | OpenAI、Anthropic Claude、Google Gemini、DeepSeek、通义千问、Kimi、Groq、Mistral、xAI、OpenRouter、Together、SiliconFlow、自定义 OpenAI-compatible |
+| 图片 | OpenAI Images、Replicate、fal、Runway、自定义 OpenAI Images-compatible |
+| 视频 | OpenAI Video、Replicate、fal、Runway、自定义 OpenAI Video-compatible |
 
-图片 Provider 已接入 `gpt-image-2`。视频使用统一 `VideoProvider`；默认关闭并返回 `deferred`，避免核心演示依赖已经进入旧版状态的视频模型。
+OpenAI 使用 Agents SDK 和 Responses API；Anthropic 使用原生 Messages API；其余 LLM 通过可配置的 OpenAI-compatible Chat Completions 接入。结构化输出会依次尝试严格 JSON Schema、JSON Object 和普通 JSON，兼容只实现了部分 `response_format` 的服务。Gemini、DeepSeek 和阿里云均有官方兼容接口说明：[Gemini](https://ai.google.dev/gemini-api/docs/openai)、[DeepSeek](https://api-docs.deepseek.com/quick_start/pricing)、[阿里云百炼](https://help.aliyun.com/zh/model-studio/compatibility-of-openai-with-dashscope)。
+
+Replicate、fal 和 Runway 使用异步任务 ID，因此可覆盖这些平台托管的大量图片与视频模型，不需要在 StoryForge 里为每个模型复制一套工作流。参考：[Replicate Predictions](https://replicate.com/docs/reference/http/)、[fal Queue](https://fal.ai/docs/documentation/model-apis/inference/queue)、[Runway API](https://docs.dev.runwayml.com/api/)。
+
+图片和视频默认关闭。只有用户主动开启并填写数量或秒数上限后，系统才会提交付费媒体任务；失败时文本制作包仍会完成，相关项目保留为 `prompt-only` 或 `deferred`。
 
 ## 评测结果
 
@@ -240,11 +243,12 @@ cp -R storyforge-agent/skills/short-drama-creation-master ~/.codex/skills/
 - 结构化阶段协议：Zod 在边界上发现错误，不把自由文本错误传给下游。
 - Skill 编译：创作规则和应用代码不会静默漂移。
 - 本地演示与云端运行共用数据协议：招聘方不需要密钥，真实用户也不用换一套界面。
-- Provider 抽象：图片和视频能力可以替换，制作包不会被单一媒体服务锁死。
+- Provider Hub：LLM、图片和视频共用一套安全配置协议，厂商预设和自定义 HTTPS 端点并存。
+- 兼容性降级：密钥探测只在厂商明确返回 401 时判为无效；403、公司代理、网络异常或健康检查不兼容时交给首次真实请求确认。
 
 ## 简历描述
 
-> 独立设计并实现 StoryForge Agent，一套从一句话生成视频制作包的全栈多 Agent 系统。使用 Next.js、OpenAI Agents SDK、Trigger.dev 和 Supabase 构建固定 DAG、结构化阶段协议、实时运行可视化、BYOK 加密、断线恢复、定向重试和多格式导出；建立 12 类视频自动评测与 Playwright 端到端测试，夹具评测的结构、时间闭合和资产引用通过率均为 100%。
+> 独立设计并实现 StoryForge Agent，一套从一句话生成视频制作包的全栈多 Agent 系统。使用 Next.js、Zod、Trigger.dev、Supabase 和可扩展 Provider Hub，接入 OpenAI、Anthropic、Gemini、DeepSeek、Qwen、Replicate、fal、Runway 等 LLM/图片/视频 API；实现固定 DAG、结构化阶段协议、实时可视化、BYOK 加密、断线恢复、定向重试和多格式导出，并建立 12 类视频自动评测与 Playwright 端到端测试。
 
 ## 说明
 

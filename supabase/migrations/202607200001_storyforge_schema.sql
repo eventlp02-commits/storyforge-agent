@@ -96,6 +96,9 @@ create table public.shots (
   asset_ids text[] not null default '{}',
   prompt text not null,
   generation_status text not null default 'ready',
+  media_url text,
+  provider_job_id text,
+  media_provider text,
   created_at timestamptz not null default now(),
   unique (run_id, shot_code)
 );
@@ -143,7 +146,7 @@ create table public.provider_credentials (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   run_id uuid not null references public.runs(id) on delete cascade,
-  provider text not null check (provider in ('openai')),
+  provider text not null check (provider ~ '^(llm|image|video):[a-zA-Z0-9._-]+$'),
   ciphertext bytea not null,
   iv bytea not null,
   auth_tag bytea not null,

@@ -94,6 +94,9 @@ export const shotSchema = z.object({
   assetIds: z.array(z.string()),
   prompt: z.string(),
   generationStatus: z.enum(["ready", "generating", "done", "deferred"]),
+  fileUrl: z.string().optional(),
+  providerJobId: z.string().optional(),
+  mediaProvider: z.string().optional(),
 });
 
 export const assetSchema = z.object({

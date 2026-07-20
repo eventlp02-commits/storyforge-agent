@@ -1,7 +1,24 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { stopMediaGeneration } from "@storyforge/agent-core";
+import { projectRepository } from "@/server/project-repository";
 
 export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
+  const local = projectRepository.getProjectByRun(id);
+  if (local) {
+    projectRepository.updateRun(id, (project) => {
+      const sequence = Math.max(0, ...project.events.map((event) => event.sequence)) + 1;
+      const now = new Date().toISOString();
+      return {
+        ...project,
+        assets: stopMediaGeneration(project.assets),
+        shots: project.shots.map((shot) => shot.generationStatus === "generating" ? { ...shot, generationStatus: "deferred" as const } : shot),
+        events: [...project.events, { id: `${id}:media-stopped`, sequence, runId: id, type: "tool.called", title: "媒体生成已停止", detail: "未开始的媒体任务保留为提示词", timestamp: now, sanitized: true }],
+        updatedAt: now,
+      };
+    });
+    return Response.json({ runId: id, mediaGenerationStopped: true, backend: "local" });
+  }
   try {
     const supabase = await createSupabaseServerClient();
     const { data: claimsData } = await supabase.auth.getClaims();

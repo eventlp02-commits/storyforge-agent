@@ -23,6 +23,7 @@ import { AgentGraph } from "./agent-graph";
 import { ArtifactCanvas, type CanvasTab } from "./artifact-canvas";
 import { RunObserver } from "./run-observer";
 import { StatusPill } from "./status-pill";
+import { ProviderConnectionModal } from "./provider-connection-modal";
 
 const storageKey = "storyforge.workspace.v1";
 
@@ -48,8 +49,6 @@ export function StoryForgeWorkspace() {
   const [concept, setConcept] = useState("");
   const [creationMode, setCreationMode] = useState<"demo" | "live">("demo");
   const [showCredential, setShowCredential] = useState(false);
-  const [apiKey, setApiKey] = useState("");
-  const [isSubmittingCredential, setIsSubmittingCredential] = useState(false);
   const [pendingRunId, setPendingRunId] = useState<string>();
   const [liveProjectId, setLiveProjectId] = useState<string>();
   const [editingArtifact, setEditingArtifact] = useState<Artifact>();
@@ -174,31 +173,6 @@ export function StoryForgeWorkspace() {
     } catch {
       setRunStatus("paused");
       setToast("真实项目创建失败，请刷新后重试。 ");
-    }
-  }
-
-  async function submitCredential() {
-    if (!pendingRunId || apiKey.length < 20) {
-      setToast("请先用真实模式立项，并填写有效的 OpenAI API Key。 ");
-      return;
-    }
-    setIsSubmittingCredential(true);
-    try {
-      const response = await fetch("/api/credentials/openai", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ runId: pendingRunId, apiKey }),
-      });
-      const body = await response.json() as { message?: string; backend?: "local" | "cloud"; keyAccepted?: boolean };
-      if (!response.ok) throw new Error(body.message ?? "密钥提交失败，请稍后重试。 ");
-      setApiKey("");
-      setShowCredential(false);
-      setRunStatus("running");
-      setToast(body.backend === "local" ? "API Key 已由 OpenAI 确认，本地 Agent 正在运行。 " : "API Key 已确认，云端 Agent 正在运行。 ");
-    } catch (error) {
-      setToast(error instanceof Error ? error.message : "密钥提交失败，请稍后重试。 ");
-    } finally {
-      setIsSubmittingCredential(false);
     }
   }
 
@@ -333,7 +307,7 @@ export function StoryForgeWorkspace() {
         </div>
         <div className="header-actions">
           <button className="command-button" type="button" onClick={replayDemo}><Sparkles size={13} />回放演示</button>
-          <button className="command-button" type="button" title="真实运行时连接 OpenAI 密钥" onClick={openModelConnection}><KeyRound size={13} />连接模型</button>
+          <button className="command-button" type="button" title="配置 LLM、图片和视频模型" onClick={openModelConnection}><KeyRound size={13} />连接模型</button>
           <a className="icon-button" title="查看 GitHub" aria-label="查看 GitHub" href="https://github.com/eventlp02-commits/storyforge-agent" target="_blank" rel="noreferrer"><GitBranch size={15} /></a>
         </div>
       </header>
@@ -385,19 +359,18 @@ export function StoryForgeWorkspace() {
           </div>
         </div>
       ) : null}
-      {showCredential ? (
-        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="连接 OpenAI 模型">
-          <div className="modal credential-modal">
-            <div className="modal-header"><h2>连接 OpenAI 模型</h2><button className="icon-button" type="button" title="关闭" onClick={() => setShowCredential(false)}><X size={14} /></button></div>
-            <div className="credential-form">
-              <div className="credential-note"><KeyRound size={18} /><p>无需 GitHub 登录。本地模式只在当前服务端进程内使用密钥，任务结束后立即释放；云端模式会使用 AES-GCM 临时加密。密钥不会写入浏览器存储、日志或 Agent trace。</p></div>
-              <label htmlFor="openai-key">OpenAI API Key</label>
-              <input id="openai-key" type="password" autoComplete="off" value={apiKey} onChange={(event) => setApiKey(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && pendingRunId && apiKey.trim().length >= 20 && !isSubmittingCredential) void submitCredential(); }} placeholder="sk-..." />
-              <span>{isSubmittingCredential ? "正在向 OpenAI 验证密钥…" : `运行编号：${pendingRunId ?? "请先切换到真实运行并创建项目"}`}</span>
-            </div>
-            <div className="modal-footer"><button className="command-button" type="button" onClick={() => setShowCredential(false)}>取消</button><button className="command-button primary" type="button" onClick={() => void submitCredential()} disabled={!pendingRunId || apiKey.trim().length < 20 || isSubmittingCredential}>{isSubmittingCredential ? "正在确认…" : "确认密钥并启动"}</button></div>
-          </div>
-        </div>
+      {showCredential && pendingRunId ? (
+        <ProviderConnectionModal
+          runId={pendingRunId}
+          onClose={() => setShowCredential(false)}
+          onError={setToast}
+          onStarted={(info) => {
+            setShowCredential(false);
+            setRunStatus("running");
+            const deferred = Object.values(info.verification ?? {}).some((state) => state === "deferred");
+            setToast(`${info.llmLabel} 配置已接受，${info.backend === "cloud" ? "云端" : "本地"} Agent 正在运行${deferred ? "；连接将在首次请求时最终确认" : ""}。 `);
+          }}
+        />
       ) : null}
       {toast ? <div className="toast" role="status">{toast}</div> : null}
     </div>

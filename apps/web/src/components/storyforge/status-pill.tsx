@@ -13,6 +13,7 @@ const labels: Record<string, string> = {
   "prompt-only": "仅提示词",
   generating: "生成中",
   deferred: "已延后",
+  ready: "提示词就绪",
 };
 
 export function StatusPill({ status }: { status: string }) {

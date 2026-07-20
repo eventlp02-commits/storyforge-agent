@@ -60,12 +60,7 @@ export async function POST(request: Request) {
         status: "queued",
         mode: "live",
         skill_version: getSkillVersion(),
-        model_config: {
-          creative: process.env.STORYFORGE_CREATIVE_MODEL ?? "gpt-5.6-terra",
-          utility: process.env.STORYFORGE_UTILITY_MODEL ?? "gpt-5.6-luna",
-          quality: process.env.STORYFORGE_QUALITY_MODEL ?? "gpt-5.6-sol",
-          image: process.env.STORYFORGE_IMAGE_MODEL ?? "gpt-image-2",
-        },
+        model_config: {},
         budget: { maxTokens: 120000, maxCostUsd: 20, maxImages: 20, maxVideoSeconds: 120, maxRetries: 2 },
         idempotency_key: idempotencyKey,
       }).select("id").single();
