@@ -4,7 +4,7 @@ StoryForge Agent 是一个把“一句话视频创意”自动整理成完整制
 
 用户不用先写需求文档。输入一句话后，系统会补全时长、画幅、语言和风格，依次完成创意简报、世界观、剧本、镜头时间线、资产规划、生成提示词、质量检查和文件导出。整个过程会在页面上实时展示，但不会泄露模型的隐藏推理。
 
-> 当前仓库自带原创《星脉之歌》无密钥演示。它不会调用付费 API，适合招聘方直接查看。真实运行使用 GitHub 登录和用户自己的 OpenAI API Key。
+> 当前仓库自带原创《星脉之歌》无密钥演示。它不会调用付费 API，适合招聘方直接查看。真实运行无需 GitHub 登录，只需用户自己的 OpenAI API Key。
 
 ![StoryForge Agent 30 秒演示](docs/demo.gif)
 
@@ -46,7 +46,7 @@ pnpm test:e2e
 ## 页面怎么用
 
 1. 在顶部输入一句话创意。
-2. 选择“演示”可以免费本地回放，选择“真实运行”会建立云端任务。
+2. 选择“演示”可以免费本地回放；选择“真实运行”会优先使用已配置的云端任务，否则自动使用本地 BYOK Agent。
 3. 左侧查看 Agent 当前阶段、并行任务和失败重试。
 4. 中间切换简报、世界观、剧本、时间线、资产、提示词和质检。
 5. 右侧查看已清洗的事件、耗时、Token 和费用。
@@ -80,7 +80,7 @@ flowchart TD
 ```mermaid
 flowchart LR
   UI["Next.js 工作台"] --> API["Route Handlers"]
-  API --> AUTH["Supabase Auth / GitHub"]
+  API --> AUTH["本地会话 / Supabase 匿名会话"]
   API --> DB["Supabase PostgreSQL + RLS"]
   API --> TR["Trigger.dev"]
   TR --> DAG["StoryForge 固定 DAG"]
@@ -103,15 +103,18 @@ sequenceDiagram
   participant T as Trigger.dev
   participant A as Agents SDK
   U->>W: 输入一句话并创建项目
-  W->>D: 保存 project 和 run
   U->>W: 提交一次性 API Key
-  W->>D: AES-GCM 密文，1 小时过期
-  W->>T: 使用幂等键启动长任务
-  T->>A: 按固定 DAG 流式执行
-  T->>D: 写入阶段、产物和清洗事件
-  D-->>W: Realtime 更新
+  alt 已配置 Supabase 与 Trigger.dev
+    W->>D: 匿名会话保存 project、run 与 AES-GCM 密文
+    W->>T: 使用幂等键启动长任务
+    T->>A: 按固定 DAG 流式执行
+    T->>D: 写入阶段、产物和清洗事件
+    D-->>W: Realtime 更新
+  else 本地 BYOK
+    W->>A: 验证密钥后在服务端内存执行固定 DAG
+    A-->>W: 实时更新本地项目状态与产物
+  end
   W-->>U: 展示图谱、时间线、资产和成本
-  T->>D: 完成后删除密钥
 ```
 
 ## 技术栈
@@ -119,7 +122,7 @@ sequenceDiagram
 - 前端：Next.js 16 App Router、React 19、TypeScript、Tailwind CSS、React Flow、Lucide
 - Agent：OpenAI Agents SDK TypeScript、Zod、代码控制 DAG、流式事件、敏感 trace 关闭
 - 后台任务：Trigger.dev，支持断线恢复、重试、取消和幂等执行
-- 数据：Supabase PostgreSQL、GitHub Auth、Storage、Realtime、RLS
+- 数据：本地内存运行，或 Supabase PostgreSQL、匿名 Auth、Storage、Realtime、RLS
 - 导出：JSZip、docx
 - 测试：Vitest、Playwright、GitHub Actions
 - 部署：Vercel + Supabase + Trigger.dev
@@ -155,9 +158,11 @@ pnpm skill:compile
 ## 安全设计
 
 - 公开演示不会调用付费 API。
-- 真实运行必须先使用 GitHub 登录。
-- API Key 在服务端使用 AES-256-GCM 加密，不进入浏览器存储、日志或 Agent trace。
-- 临时密钥最多保留一小时，任务结束后立即删除。
+- 真实运行无需 GitHub 登录；本地模式验证 API Key 后直接启动。
+- 云端模式使用 Supabase 匿名会话隔离每位用户的数据，也可以按部署需要增加 GitHub 登录。
+- 本地模式不持久化 API Key，只在当前服务端任务的内存中使用，任务结束后立即释放。
+- 云端模式使用 AES-256-GCM 加密 API Key，最多保留一小时，任务结束后立即删除。
+- 两种模式都不会把密钥写入浏览器存储、日志或 Agent trace。
 - Supabase RLS 限制项目、运行、镜头、资产、事件和凭据只能由所有者访问。
 - `run_events` 强制保存清洗后的事件，不保存隐藏推理。
 - 每次运行限制 Token、费用、图片数、视频秒数和自动重试次数。
@@ -195,7 +200,7 @@ STORYFORGE_VIDEO_ENABLED=false
 ## 部署
 
 1. 在 Supabase 创建项目并执行 `supabase/migrations`。
-2. 在 Supabase Auth 开启 GitHub Provider。
+2. 在 Supabase Auth 开启 Anonymous Sign-Ins；GitHub Provider 是可选项。
 3. 在 Trigger.dev 创建项目并部署 `trigger/tasks`。
 4. 在 Vercel 导入仓库，按 `.env.example` 配置环境变量。
 5. 使用 `openssl rand -hex 32` 生成 `CREDENTIAL_ENCRYPTION_KEY`。

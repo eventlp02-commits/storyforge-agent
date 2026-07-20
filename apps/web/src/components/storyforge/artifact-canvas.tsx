@@ -24,13 +24,15 @@ function artifactFor(project: ProjectSnapshot, type: Artifact["type"]) {
 
 function BriefView({ project, onEdit }: { project: ProjectSnapshot; onEdit: (artifact: Artifact) => void }) {
   const artifact = artifactFor(project, "brief");
+  const brief = artifact?.content as { format?: string; audience?: string; goal?: string } | undefined;
+  const isDemo = project.id === "project-starvein-demo";
   return (
     <article className="document-sheet">
       <header className="document-header">
         <div className="document-intro">
-          <p className="eyebrow">World showcase · 120 seconds</p>
+          <p className="eyebrow">{brief?.format ?? project.config.format} · {project.config.durationSeconds} seconds</p>
           <h2>{project.config.title}</h2>
-          <p className="lede">一场横跨六族文明的旅程，以人类魔法与剑术为入口，把城市、交通、贸易、食物和共同危机织成一个可继续生长的原创世界。</p>
+          <p className="lede">{brief?.goal ?? project.config.concept}</p>
           <div className="meta-row">
             <span className="meta-chip">{project.config.durationSeconds} 秒</span>
             <span className="meta-chip">{project.config.aspectRatio}</span>
@@ -39,7 +41,7 @@ function BriefView({ project, onEdit }: { project: ProjectSnapshot; onEdit: (art
           </div>
         </div>
         <div className="document-cover">
-          <Image src="/demo/world-bible.jpg" alt="星脉纪元原创世界美术设定" fill priority sizes="(max-width: 820px) 100vw, 40vw" />
+          {isDemo ? <Image src="/demo/world-bible.jpg" alt="星脉纪元原创世界美术设定" fill priority sizes="(max-width: 820px) 100vw, 40vw" /> : <div className="live-cover"><Sparkles size={34} /><strong>{project.config.title}</strong><span>{project.config.visualStyle}</span></div>}
         </div>
       </header>
       <div className="document-body">
@@ -48,9 +50,9 @@ function BriefView({ project, onEdit }: { project: ProjectSnapshot; onEdit: (art
           {artifact ? <button className="icon-button" type="button" title="编辑创意简报" onClick={() => onEdit(artifact)}><Edit3 size={14} /></button> : null}
         </div>
         <div className="brief-grid">
-          <div className="brief-cell teal"><strong>核心承诺</strong><p>让观众在两分钟内相信这个世界不仅壮观，而且真的有人在其中生活。</p></div>
-          <div className="brief-cell amber"><strong>情绪曲线</strong><p>发现、亲近、紧张、协作、释然。危机服务于文明连接，不压过世界展示。</p></div>
-          <div className="brief-cell coral"><strong>视觉命题</strong><p>每种文明拥有独特材质与运动方式，并由同一种星脉能量建立共同视觉语法。</p></div>
+          <div className="brief-cell teal"><strong>创作目标</strong><p>{brief?.goal ?? project.config.concept}</p></div>
+          <div className="brief-cell amber"><strong>目标观众</strong><p>{brief?.audience ?? "根据创意与发布场景自动推断"}</p></div>
+          <div className="brief-cell coral"><strong>视觉方向</strong><p>{project.config.visualStyle}</p></div>
         </div>
         <div className="assumptions">
           <h3>Intake Agent 的推断</h3>
@@ -65,7 +67,9 @@ function BriefView({ project, onEdit }: { project: ProjectSnapshot; onEdit: (art
 
 function WorldView({ project, onEdit }: { project: ProjectSnapshot; onEdit: (artifact: Artifact) => void }) {
   const artifact = artifactFor(project, "world");
-  const world = artifact?.content as { premise?: string; civilizations?: string[]; rules?: string[] } | undefined;
+  const world = artifact?.content as { premise?: string; civilizations?: string[]; rules?: string[]; story?: { logline?: string; theme?: string; worldRules?: string[] }; artDirection?: { visualThesis?: string; rendering?: string; lighting?: string } } | undefined;
+  const premise = world?.premise ?? world?.story?.logline;
+  const rules = world?.rules ?? world?.story?.worldRules;
   const images = [
     ["/demo/capital.jpg", "卢米拉人类首都"],
     ["/demo/elf-city.jpg", "埃尔维林树冠城"],
@@ -79,19 +83,19 @@ function WorldView({ project, onEdit }: { project: ProjectSnapshot; onEdit: (art
           <div><p className="eyebrow">World bible</p><h2>维尔塔拉世界圣经</h2></div>
           {artifact ? <button className="icon-button" type="button" title="编辑世界观" onClick={() => onEdit(artifact)}><Edit3 size={14} /></button> : null}
         </div>
-        <p className="lede" style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7 }}>{world?.premise}</p>
-        <div className="world-grid" style={{ marginTop: 16 }}>
+        <p className="lede" style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7 }}>{premise}</p>
+        {project.id === "project-starvein-demo" ? <div className="world-grid" style={{ marginTop: 16 }}>
           {images.map(([src, label]) => (
             <figure className="world-image" key={src}>
               <Image src={src} alt={label} fill sizes="(max-width: 820px) 100vw, 40vw" />
               <figcaption>{label}</figcaption>
             </figure>
           ))}
-        </div>
+        </div> : null}
         <div className="brief-grid" style={{ marginTop: 20 }}>
-          <div className="brief-cell teal"><strong>文明</strong><p>{world?.civilizations?.join("、")}</p></div>
-          <div className="brief-cell amber"><strong>魔法规则</strong><p>{world?.rules?.[0]}</p></div>
-          <div className="brief-cell coral"><strong>共同主题</strong><p>没有任何族群能独占星脉，连接本身就是这个世界最强的力量。</p></div>
+          <div className="brief-cell teal"><strong>世界主题</strong><p>{world?.story?.theme ?? world?.civilizations?.join("、")}</p></div>
+          <div className="brief-cell amber"><strong>核心规则</strong><p>{rules?.[0]}</p></div>
+          <div className="brief-cell coral"><strong>美术命题</strong><p>{world?.artDirection?.visualThesis ?? "建立统一且可持续复用的视觉语法"}</p></div>
         </div>
       </div>
     </article>
@@ -100,7 +104,7 @@ function WorldView({ project, onEdit }: { project: ProjectSnapshot; onEdit: (art
 
 function ScriptView({ project, onEdit }: { project: ProjectSnapshot; onEdit: (artifact: Artifact) => void }) {
   const artifact = artifactFor(project, "script");
-  const content = artifact?.content as { scenes?: string[]; dialogue?: Array<{ shotId: string; line: string }> } | undefined;
+  const content = artifact?.content as { scenes?: Array<string | { id?: string; start?: number; end?: number; location?: string; action?: string; dialogue?: Array<{ speaker: string; line: string }>; narration?: string }>; dialogue?: Array<{ shotId: string; line: string }> } | undefined;
   const sceneShots = [project.shots.slice(0, 2), project.shots.slice(2, 7), project.shots.slice(7, 12), project.shots.slice(12, 14), project.shots.slice(14, 15), project.shots.slice(15)];
   return (
     <div className="document-sheet">
@@ -110,13 +114,17 @@ function ScriptView({ project, onEdit }: { project: ProjectSnapshot; onEdit: (ar
           {artifact ? <button className="command-button" type="button" onClick={() => onEdit(artifact)}><Edit3 size={13} />编辑剧本</button> : null}
         </div>
         <div className="script-list">
-          {content?.scenes?.map((scene, index) => (
-            <section className="script-scene" key={scene}>
-              <h3>{String(index + 1).padStart(2, "0")} · {scene}</h3>
-              <p>{sceneShots[index]?.map((shot) => shot.action).join(" ")}</p>
-              {sceneShots[index]?.filter((shot) => shot.dialogue).map((shot) => <p className="shot-dialogue" key={shot.id}>{shot.dialogue}</p>)}
+          {content?.scenes?.map((scene, index) => {
+            const sceneObject = typeof scene === "string" ? undefined : scene;
+            const heading = typeof scene === "string" ? scene : `${scene.location ?? scene.id ?? "场景"}${scene.start !== undefined && scene.end !== undefined ? ` · ${scene.start}-${scene.end} 秒` : ""}`;
+            return <section className="script-scene" key={sceneObject?.id ?? `${heading}-${index}`}>
+              <h3>{String(index + 1).padStart(2, "0")} · {heading}</h3>
+              <p>{sceneObject?.action ?? sceneShots[index]?.map((shot) => shot.action).join(" ")}</p>
+              {sceneObject?.narration ? <p className="shot-dialogue">旁白：{sceneObject.narration}</p> : null}
+              {sceneObject?.dialogue?.map((line, lineIndex) => <p className="shot-dialogue" key={`${line.speaker}-${lineIndex}`}>{line.speaker}：{line.line}</p>)}
+              {!sceneObject ? sceneShots[index]?.filter((shot) => shot.dialogue).map((shot) => <p className="shot-dialogue" key={shot.id}>{shot.dialogue}</p>) : null}
             </section>
-          ))}
+          })}
         </div>
       </div>
     </div>
@@ -125,7 +133,7 @@ function ScriptView({ project, onEdit }: { project: ProjectSnapshot; onEdit: (ar
 
 function PromptView({ project, onEdit }: { project: ProjectSnapshot; onEdit: (artifact: Artifact) => void }) {
   const artifact = artifactFor(project, "prompts");
-  const content = artifact?.content as { styleLock?: string; language?: string } | undefined;
+  const content = artifact?.content as { styleLock?: string; globalStyleLock?: string; language?: string } | undefined;
   return (
     <div className="document-sheet">
       <div className="document-body">
@@ -135,7 +143,7 @@ function PromptView({ project, onEdit }: { project: ProjectSnapshot; onEdit: (ar
         </div>
         <div className="qa-score" style={{ minHeight: 90, marginBottom: 12 }}>
           <Sparkles size={26} color="var(--teal)" />
-          <div><strong style={{ fontSize: 12 }}>全局风格锁</strong><p style={{ margin: "5px 0 0", color: "#42605a", fontSize: 11, lineHeight: 1.5 }}>{content?.styleLock}</p></div>
+          <div><strong style={{ fontSize: 12 }}>全局风格锁</strong><p style={{ margin: "5px 0 0", color: "#42605a", fontSize: 11, lineHeight: 1.5 }}>{content?.globalStyleLock ?? content?.styleLock}</p></div>
         </div>
         <div className="prompt-list">
           {project.shots.map((shot) => (

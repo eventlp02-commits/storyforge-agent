@@ -13,4 +13,9 @@ describe("Supabase credential policies", () => {
     const migration = readFileSync(new URL("../../../../supabase/migrations/202607200001_storyforge_schema.sql", import.meta.url), "utf8");
     expect(migration).toMatch(/create table public\.shots \([\s\S]+purpose text not null[\s\S]+generation_status text not null/);
   });
+
+  it("enables anonymous sessions so live runs do not require GitHub login", () => {
+    const config = readFileSync(new URL("../../../../supabase/config.toml", import.meta.url), "utf8");
+    expect(config).toContain("enable_anonymous_sign_ins = true");
+  });
 });

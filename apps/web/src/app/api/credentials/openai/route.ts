@@ -1,15 +1,39 @@
 import { z } from "zod";
 import { encryptCredential } from "@storyforge/agent-core";
 import { tasks } from "@trigger.dev/sdk";
+import { after } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { runLocalStoryForge, validateOpenAIApiKey } from "@/server/local-live-runner";
+import { projectRepository } from "@/server/project-repository";
 
 const credentialSchema = z.object({ apiKey: z.string().min(20).max(300), runId: z.string().min(1).max(200) });
 
 export const runtime = "nodejs";
+export const maxDuration = 800;
 
 export async function POST(request: Request) {
   const parsed = credentialSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "invalid_credential" }, { status: 400 });
+  const localProject = projectRepository.getProjectByRun(parsed.data.runId);
+  if (localProject) {
+    const validation = await validateOpenAIApiKey(parsed.data.apiKey);
+    if (!validation.valid) {
+      if (validation.reason === "invalid_api_key") {
+        return Response.json({ error: "invalid_api_key", message: "OpenAI 拒绝了这个 API Key，请检查后重试。" }, { status: 401 });
+      }
+      return Response.json({ error: validation.reason, message: "暂时无法连接 OpenAI，请检查网络后重试。" }, { status: 503 });
+    }
+    projectRepository.updateRun(parsed.data.runId, (project) => ({ ...project, status: "queued", updatedAt: new Date().toISOString() }));
+    after(async () => runLocalStoryForge(parsed.data.runId, parsed.data.apiKey));
+    return Response.json({ runId: parsed.data.runId, backend: "local", keyAccepted: true, status: "queued" }, { status: 202 });
+  }
+  const validation = await validateOpenAIApiKey(parsed.data.apiKey);
+  if (!validation.valid) {
+    if (validation.reason === "invalid_api_key") {
+      return Response.json({ error: "invalid_api_key", message: "OpenAI 拒绝了这个 API Key，请检查后重试。" }, { status: 401 });
+    }
+    return Response.json({ error: validation.reason, message: "暂时无法连接 OpenAI，请检查网络后重试。" }, { status: 503 });
+  }
   const encryptionKey = process.env.CREDENTIAL_ENCRYPTION_KEY;
   if (!encryptionKey) return Response.json({ error: "server_not_configured" }, { status: 503 });
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
@@ -51,7 +75,7 @@ export async function POST(request: Request) {
       requestedAttempt: retryStage?.attempt,
     }, { idempotencyKey: `${parsed.data.runId}:storyforge-run:${workflowAttempt}` });
     await supabase.from("runs").update({ trigger_run_id: handle.id, status: "queued" }).eq("id", parsed.data.runId).eq("user_id", userId);
-    return Response.json({ runId: parsed.data.runId, expiresAt: encrypted.expiresAt, taskRunId: handle.id }, { status: 201 });
+    return Response.json({ runId: parsed.data.runId, expiresAt: encrypted.expiresAt, taskRunId: handle.id, backend: "cloud", keyAccepted: true }, { status: 201 });
   } catch {
     return Response.json({ error: "credential_persistence_failed" }, { status: 503 });
   }

@@ -21,9 +21,24 @@ test("creates a one-sentence local project and restores it after refresh", async
   const prompt = "一名修钟匠发现整座城市的时间正在倒流";
   await page.getByLabel("一句话视频创意").fill(prompt);
   await page.getByRole("button", { name: "开始创作" }).click();
-  await expect(page.getByText(prompt)).toBeVisible();
+  await expect(page.getByText(prompt).first()).toBeVisible();
   await page.reload();
-  await expect(page.getByText(prompt)).toBeVisible();
+  await expect(page.getByText(prompt).first()).toBeVisible();
+});
+
+test("starts a real BYOK run without showing a GitHub login gate", async ({ page }) => {
+  await page.route("**/api/credentials/openai", async (route) => {
+    await route.fulfill({ status: 202, contentType: "application/json", body: JSON.stringify({ backend: "local", keyAccepted: true, status: "queued" }) });
+  });
+  await page.getByRole("button", { name: "真实运行" }).click();
+  await page.getByLabel("一句话视频创意").fill("一名灯塔守护者发现海面漂来另一颗月亮");
+  await page.getByRole("button", { name: "开始创作" }).click();
+  const dialog = page.getByRole("dialog", { name: "连接 OpenAI 模型" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText("无需 GitHub 登录", { exact: false })).toBeVisible();
+  await dialog.getByLabel("OpenAI API Key").fill("test-key-12345678901234567890");
+  await dialog.getByRole("button", { name: "确认密钥并启动" }).click();
+  await expect(page.getByRole("status")).toContainText("API Key 已由 OpenAI 确认");
 });
 
 test("exports the complete production package", async ({ page }, testInfo) => {

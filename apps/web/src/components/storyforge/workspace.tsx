@@ -49,6 +49,7 @@ export function StoryForgeWorkspace() {
   const [creationMode, setCreationMode] = useState<"demo" | "live">("demo");
   const [showCredential, setShowCredential] = useState(false);
   const [apiKey, setApiKey] = useState("");
+  const [isSubmittingCredential, setIsSubmittingCredential] = useState(false);
   const [pendingRunId, setPendingRunId] = useState<string>();
   const [liveProjectId, setLiveProjectId] = useState<string>();
   const [editingArtifact, setEditingArtifact] = useState<Artifact>();
@@ -163,20 +164,16 @@ export function StoryForgeWorkspace() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ concept: trimmed, mode: "live" }),
       });
-      if (response.status === 401) {
-        window.location.href = "/auth/login";
-        return;
-      }
-      const body = await response.json() as { projectId?: string; runId?: string; message?: string };
+      const body = await response.json() as { projectId?: string; runId?: string; backend?: "local" | "cloud"; message?: string };
       if (!response.ok || !body.projectId || !body.runId) throw new Error(body.message ?? "Live backend unavailable");
       setLiveProjectId(body.projectId);
       setPendingRunId(body.runId);
       setShowCredential(true);
       setRunStatus("paused");
-      setToast("云端项目已建立，请提交一次性密钥启动真实 Agent。 ");
+      setToast(body.backend === "cloud" ? "云端项目已建立，请提交一次性密钥启动真实 Agent。 " : "本地真实项目已建立，请提交 API Key 启动 Agent。 ");
     } catch {
       setRunStatus("paused");
-      setToast("真实后端尚未配置，请先使用无密钥演示。 ");
+      setToast("真实项目创建失败，请刷新后重试。 ");
     }
   }
 
@@ -185,24 +182,33 @@ export function StoryForgeWorkspace() {
       setToast("请先用真实模式立项，并填写有效的 OpenAI API Key。 ");
       return;
     }
+    setIsSubmittingCredential(true);
     try {
       const response = await fetch("/api/credentials/openai", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ runId: pendingRunId, apiKey }),
       });
-      if (response.status === 401) {
-        window.location.href = "/auth/login";
-        return;
-      }
-      if (!response.ok) throw new Error("Credential submission failed");
+      const body = await response.json() as { message?: string; backend?: "local" | "cloud"; keyAccepted?: boolean };
+      if (!response.ok) throw new Error(body.message ?? "密钥提交失败，请稍后重试。 ");
       setApiKey("");
       setShowCredential(false);
       setRunStatus("running");
-      setToast("真实任务已交给后台执行，关闭页面也不会中断。 ");
-    } catch {
-      setToast("密钥未提交成功。请检查登录状态和云端配置。 ");
+      setToast(body.backend === "local" ? "API Key 已由 OpenAI 确认，本地 Agent 正在运行。 " : "API Key 已确认，云端 Agent 正在运行。 ");
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "密钥提交失败，请稍后重试。 ");
+    } finally {
+      setIsSubmittingCredential(false);
     }
+  }
+
+  function openModelConnection() {
+    if (!pendingRunId) {
+      setCreationMode("live");
+      setToast("已切换到真实运行：先输入一句话创意并创建项目，随后即可验证 API Key。 ");
+      return;
+    }
+    setShowCredential(true);
   }
 
   function replayDemo() {
@@ -327,7 +333,7 @@ export function StoryForgeWorkspace() {
         </div>
         <div className="header-actions">
           <button className="command-button" type="button" onClick={replayDemo}><Sparkles size={13} />回放演示</button>
-          <button className="command-button" type="button" title="真实运行时连接 OpenAI 密钥" onClick={() => setShowCredential(true)}><KeyRound size={13} />连接模型</button>
+          <button className="command-button" type="button" title="真实运行时连接 OpenAI 密钥" onClick={openModelConnection}><KeyRound size={13} />连接模型</button>
           <a className="icon-button" title="查看 GitHub" aria-label="查看 GitHub" href="https://github.com/eventlp02-commits/storyforge-agent" target="_blank" rel="noreferrer"><GitBranch size={15} /></a>
         </div>
       </header>
@@ -384,13 +390,12 @@ export function StoryForgeWorkspace() {
           <div className="modal credential-modal">
             <div className="modal-header"><h2>连接 OpenAI 模型</h2><button className="icon-button" type="button" title="关闭" onClick={() => setShowCredential(false)}><X size={14} /></button></div>
             <div className="credential-form">
-              <div className="credential-note"><KeyRound size={18} /><p>真实运行需要 GitHub 登录和你自己的 OpenAI API Key。密钥会在服务端使用 AES-GCM 加密，运行完成或一小时后删除，不写入日志或 Agent trace。</p></div>
-              {!pendingRunId ? <a className="command-button" href="/auth/login"><GitBranch size={13} />使用 GitHub 登录</a> : null}
+              <div className="credential-note"><KeyRound size={18} /><p>无需 GitHub 登录。本地模式只在当前服务端进程内使用密钥，任务结束后立即释放；云端模式会使用 AES-GCM 临时加密。密钥不会写入浏览器存储、日志或 Agent trace。</p></div>
               <label htmlFor="openai-key">OpenAI API Key</label>
-              <input id="openai-key" type="password" autoComplete="off" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder="sk-..." />
-              <span>运行编号：{pendingRunId ?? "请先切换到真实运行并创建项目"}</span>
+              <input id="openai-key" type="password" autoComplete="off" value={apiKey} onChange={(event) => setApiKey(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && pendingRunId && apiKey.trim().length >= 20 && !isSubmittingCredential) void submitCredential(); }} placeholder="sk-..." />
+              <span>{isSubmittingCredential ? "正在向 OpenAI 验证密钥…" : `运行编号：${pendingRunId ?? "请先切换到真实运行并创建项目"}`}</span>
             </div>
-            <div className="modal-footer"><button className="command-button" type="button" onClick={() => setShowCredential(false)}>取消</button><button className="command-button primary" type="button" onClick={submitCredential} disabled={!pendingRunId}>加密提交并启动</button></div>
+            <div className="modal-footer"><button className="command-button" type="button" onClick={() => setShowCredential(false)}>取消</button><button className="command-button primary" type="button" onClick={() => void submitCredential()} disabled={!pendingRunId || apiKey.trim().length < 20 || isSubmittingCredential}>{isSubmittingCredential ? "正在确认…" : "确认密钥并启动"}</button></div>
           </div>
         </div>
       ) : null}

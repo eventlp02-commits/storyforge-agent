@@ -17,15 +17,22 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return Response.json({ error: "invalid_request", issues: parsed.error.issues }, { status: 400 });
   }
-  if (parsed.data.mode === "live" && !process.env.CREDENTIAL_ENCRYPTION_KEY) {
-    return Response.json({ error: "credential_required", message: "真实运行需要一次性 OpenAI API Key。" }, { status: 428 });
-  }
   if (parsed.data.mode === "live") {
-    try {
+    const cloudConfigured = Boolean(
+      process.env.NEXT_PUBLIC_SUPABASE_URL
+      && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+      && process.env.CREDENTIAL_ENCRYPTION_KEY
+      && process.env.TRIGGER_SECRET_KEY,
+    );
+    if (cloudConfigured) try {
       const supabase = await createSupabaseServerClient();
-      const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
-      const userId = claimsData?.claims?.sub;
-      if (claimsError || !userId) return Response.json({ error: "authentication_required" }, { status: 401 });
+      const { data: claimsData } = await supabase.auth.getClaims();
+      let userId = claimsData?.claims?.sub;
+      if (!userId) {
+        const { data: anonymous } = await supabase.auth.signInAnonymously();
+        userId = anonymous.user?.id;
+      }
+      if (!userId) throw new Error("Anonymous session unavailable");
       const title = parsed.data.concept.length > 32 ? `${parsed.data.concept.slice(0, 32)}…` : parsed.data.concept;
       const inferredConfig = {
         durationSeconds: parsed.data.durationSeconds ?? 60,
@@ -64,10 +71,17 @@ export async function POST(request: Request) {
       }).select("id").single();
       if (runError) throw new Error(runError.code);
       await supabase.from("projects").update({ current_run_id: run.id }).eq("id", project.id).eq("user_id", userId);
-      return Response.json({ projectId: project.id, runId: run.id, credentialRequired: true }, { status: 201 });
+      return Response.json({ projectId: project.id, runId: run.id, backend: "cloud", credentialRequired: true }, { status: 201 });
     } catch {
-      return Response.json({ error: "live_backend_unavailable" }, { status: 503 });
+      // Fall back to the local BYOK runner when optional cloud services are unavailable.
     }
+    const created = projectRepository.createPending(parsed.data.concept, {
+      durationSeconds: parsed.data.durationSeconds,
+      aspectRatio: parsed.data.aspectRatio,
+      contentLanguage: parsed.data.contentLanguage,
+      visualStyle: parsed.data.visualStyle,
+    });
+    return Response.json({ ...created, backend: "local", credentialRequired: true }, { status: 201 });
   }
   const created = projectRepository.create(parsed.data.concept, {
     durationSeconds: parsed.data.durationSeconds,

@@ -20,4 +20,13 @@ describe("project repository", () => {
     expect(updated?.version).toBe(2);
     expect(repo.getProject(created.projectId)?.artifacts.some((artifact) => artifact.status === "stale")).toBe(true);
   });
+
+  it("creates a credential-ready local run without prefilled demo artifacts", () => {
+    const repo = createInMemoryProjectRepository(false);
+    const created = repo.createPending("一名厨师在漂浮列车上寻找失传菜谱");
+    const project = repo.getProject(created.projectId);
+    expect(project).toMatchObject({ status: "paused", artifacts: [], shots: [], assets: [], events: [] });
+    expect(project?.stageRuns.every((stage) => stage.status === "queued")).toBe(true);
+    expect(repo.getProjectByRun(created.runId)?.id).toBe(created.projectId);
+  });
 });

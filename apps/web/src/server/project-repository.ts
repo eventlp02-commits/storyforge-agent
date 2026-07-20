@@ -7,7 +7,10 @@ type ProjectCreation = { projectId: string; runId: string };
 
 export interface ProjectRepository {
   create(concept: string, options?: DemoProjectOptions): ProjectCreation;
+  createPending(concept: string, options?: DemoProjectOptions): ProjectCreation;
   getProject(projectId: string): ProjectSnapshot | undefined;
+  getProjectByRun(runId: string): ProjectSnapshot | undefined;
+  updateRun(runId: string, update: (project: ProjectSnapshot) => ProjectSnapshot): ProjectSnapshot | undefined;
   getEvents(runId: string, after: number): RunEvent[];
   applyAction(runId: string, action: "pause" | "resume" | "cancel"): ProjectSnapshot | undefined;
   retryStage(stageRunId: string): ProjectSnapshot | undefined;
@@ -49,9 +52,50 @@ export function createInMemoryProjectRepository(seedDemo = true): ProjectReposit
       return { projectId: project.id, runId: project.runId };
     },
 
+    createPending(concept, options) {
+      const generated = createProjectFromPrompt(concept, options);
+      const project: ProjectSnapshot = {
+        ...generated,
+        status: "paused",
+        stageRuns: generated.stageRuns.map((stage) => ({
+          ...stage,
+          id: `${generated.runId}:${stage.stage}:1`,
+          status: "queued",
+          attempt: 1,
+          startedAt: undefined,
+          completedAt: undefined,
+          durationMs: 0,
+          inputTokens: 0,
+          outputTokens: 0,
+          costUsd: 0,
+        })),
+        artifacts: [],
+        shots: [],
+        assets: [],
+        events: [],
+        qa: { score: 0, passed: false, autoRepairCount: 0, checks: [] },
+        usage: { tokens: 0, costUsd: 0, images: 0, videoSeconds: 0 },
+      };
+      projects.set(project.id, project);
+      return { projectId: project.id, runId: project.runId };
+    },
+
     getProject(projectId) {
       const project = projects.get(projectId);
       return project ? clone(project) : undefined;
+    },
+
+    getProjectByRun(runId) {
+      const project = findByRun(runId);
+      return project ? clone(project) : undefined;
+    },
+
+    updateRun(runId, update) {
+      const project = findByRun(runId);
+      if (!project) return undefined;
+      const updated = update(clone(project));
+      projects.set(updated.id, clone(updated));
+      return clone(updated);
     },
 
     getEvents(runId, after) {
