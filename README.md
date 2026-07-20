@@ -135,8 +135,10 @@ storyforge-agent/
 ├── supabase                          # 本地配置、表结构、RLS、Realtime
 ├── skills/short-drama-creation-master # 原始通用视频创作 Skill
 ├── evals                             # 12 类视频评测
-└── .github/workflows/ci.yml          # 类型、测试、构建、E2E
+└── ci/storyforge-ci.yml              # GitHub Actions 工作流模板
 ```
+
+发布仓库时，将 `ci/storyforge-ci.yml` 放到 `.github/workflows/ci.yml` 即可启用完整 CI。执行该路径变更的 GitHub 凭据必须具有 `workflow` scope。
 
 ## Skill 是唯一创作规则来源
 
