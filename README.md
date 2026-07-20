@@ -25,7 +25,7 @@ StoryForge Agent 是一个把“一句话视频创意”自动整理成完整制
 需要 Node.js 22+ 和 pnpm 11+。
 
 ```bash
-git clone https://github.com/eventlp02-commits/LiangPing.git storyforge-agent
+git clone https://github.com/eventlp02-commits/storyforge-agent.git
 cd storyforge-agent
 pnpm install
 pnpm dev
@@ -219,13 +219,13 @@ pnpm dlx trigger.dev@latest dev
 
 ```text
 使用 $skill-installer 安装：
-https://github.com/eventlp02-commits/LiangPing/tree/main/skills/short-drama-creation-master
+https://github.com/eventlp02-commits/storyforge-agent/tree/main/skills/short-drama-creation-master
 ```
 
 手动安装：
 
 ```bash
-git clone https://github.com/eventlp02-commits/LiangPing.git storyforge-agent
+git clone https://github.com/eventlp02-commits/storyforge-agent.git
 cp -R storyforge-agent/skills/short-drama-creation-master ~/.codex/skills/
 ```
 

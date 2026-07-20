@@ -328,7 +328,7 @@ export function StoryForgeWorkspace() {
         <div className="header-actions">
           <button className="command-button" type="button" onClick={replayDemo}><Sparkles size={13} />回放演示</button>
           <button className="command-button" type="button" title="真实运行时连接 OpenAI 密钥" onClick={() => setShowCredential(true)}><KeyRound size={13} />连接模型</button>
-          <a className="icon-button" title="查看 GitHub" aria-label="查看 GitHub" href="https://github.com/eventlp02-commits/LiangPing" target="_blank" rel="noreferrer"><GitBranch size={15} /></a>
+          <a className="icon-button" title="查看 GitHub" aria-label="查看 GitHub" href="https://github.com/eventlp02-commits/storyforge-agent" target="_blank" rel="noreferrer"><GitBranch size={15} /></a>
         </div>
       </header>
 

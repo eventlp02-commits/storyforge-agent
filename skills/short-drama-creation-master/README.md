@@ -55,13 +55,13 @@
 
 ```text
 使用 $skill-installer 安装这个技能：
-https://github.com/eventlp02-commits/LiangPing/tree/main/skills/short-drama-creation-master
+https://github.com/eventlp02-commits/storyforge-agent/tree/main/skills/short-drama-creation-master
 ```
 
 ### 方法二：手动安装
 
 ```bash
-git clone https://github.com/eventlp02-commits/LiangPing.git storyforge-agent
+git clone https://github.com/eventlp02-commits/storyforge-agent.git
 cp -R storyforge-agent/skills/short-drama-creation-master ~/.codex/skills/
 ```
 
