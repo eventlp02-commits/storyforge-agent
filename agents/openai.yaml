@@ -1,4 +1,4 @@
 interface:
   display_name: "通用短剧创作大师"
-  short_description: "从创意到剧本、分镜、资产与交付包的通用视频制作流程"
-  default_prompt: "使用 $short-drama-creation-master 把我的视频创意整理成可制作的剧本、分镜提示词和资产包。"
+  short_description: "检查真实成片结尾，再逐段续写的通用视频创作流程"
+  default_prompt: "使用 $short-drama-creation-master 把我的视频创意整理成剧本，并先制作 Clip 01。等我提供真实生成结果后，再从实际结尾续写下一段。"

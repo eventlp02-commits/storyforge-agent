@@ -1,0 +1,4 @@
+.DS_Store
+.turbo/
+__pycache__/
+*.py[cod]

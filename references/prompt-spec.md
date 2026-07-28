@@ -1,154 +1,183 @@
-# Prompt And Continuity Specification
+# Copy-Ready Prompt Specification
 
 ## Contents
 
-- Prompt layers
-- Shot record
-- Timed clip prompt
-- Image asset prompt
-- Audio specification
-- Transition design
-- Exclusion design
-- Asset registry rules
+- Prompt boundary
+- Video Clip prompt
+- Local timing
+- Reference syntax
+- Action and camera design
+- Light and sound
+- Image prompt
+- Forbidden content
+- Internal asset separation
 
-## Prompt Layers
+## Prompt Boundary
 
-Write generation instructions in this order so reusable facts are not buried in shot prose.
+A copy-ready prompt is model input, not a production memo. Put only executable generation instructions in the prompt file.
 
-### Global Style Lock
+Keep these elsewhere:
 
-Include:
+- brief, story route, Director Card, assumptions, and creative explanation
+- internal IDs, asset registry, source paths, filenames, and generation status
+- QA findings, user instructions, handoff notes, and delivery commentary
 
-- medium and rendering approach
-- realism or stylization level
-- palette, contrast, material response, and lighting logic
-- aspect ratio, frame rate, resolution target, and camera grammar
-- motion quality, detail density, and compositing intent
-- originality constraint and exclusions
+Do not add an introductory paragraph, copying instructions, reference legend, or explanation above or below the prompt.
 
-Do not repeat the complete global lock in every asset prompt when a shared prefix or reference field is available. Archive the exact version used.
+## Video Clip Prompt
 
-### Subject Lock
+Build the prompt in this order:
 
-For each recurring character, product, creature, vehicle, or prop define:
+1. model-native references and their roles
+2. opening continuity state
+3. local timed action with camera, light, environment, and sound
+4. dialogue or narration at the moment it occurs
+5. ending state and relevant failure prevention
 
-- asset ID and canonical name
-- silhouette, proportions, age range, face or form anchors
-- materials, colors, wear, logos, and unique asymmetry
-- fixed accessories and allowed state variants
-- forbidden drift: hairstyle, hand count, costume swaps, scale changes, text mutation, or logo deformation
-
-### Location Lock
-
-Define architecture, floor plan or geography, scale references, materials, lighting sources, weather, population, signage, and entrances/exits. Record screen direction when characters move between shots.
-
-### Effect Lock
-
-Define source, color core, edge behavior, particle direction, interaction with surfaces, light spill, sound character, and dissipation. Effects must illuminate and disturb the environment rather than float independently.
-
-## Shot Record
-
-Each shot should provide the following fields:
+Example structure for a 15-second Clip:
 
 ```text
-Shot ID:
-Time:
-Scene / purpose:
-Asset calls:
-Framing / lens feel:
-Camera position and motion:
-Blocking and visible action:
-Environment and secondary motion:
-Lighting / color / atmosphere:
-Dialogue / narration / on-screen text:
-Sound effects / ambience / music intent:
-Transition and continuity:
-Generation prompt:
-Exclusions:
+以@视频1最后一个稳定画面为开场，保持人物站位、身体朝向、机位高度、画面轴线和冷暖光关系不变。@图片1锁定主角的面部、发型、服装和武器造型，@图片2锁定大厅的柱列、台阶与门窗结构。
+
+0-3秒：主角保持半蹲，右手撑地，先抬眼看向画面左上方；镜头维持低机位近景并缓慢后移，石屑从肩甲落下，远处风声贴着空旷大厅回旋。
+3-7秒：主角借左腿发力站起并把武器拉到身侧，动作从恢复进入戒备；镜头后移成中景，门外冷光在地面延长，室内烛火轻微摇晃，只保留甲片摩擦与脚底擦过石面的声音。
+7-11秒：画面左侧高处出现移动阴影，主角立即转肩而不是重复起身；镜头顺着他的视线小幅上摇，冷光压暗面部下半部，一声短促金属碰响从高处传来。
+11-15秒：阴影停在柱顶边缘，主角将武器横在胸前并稳定重心；镜头停止移动形成低角度双层构图，环境声突然收窄，只留下呼吸、布料和高处细小碎石落地声，结尾保持双方位置清楚可接续。
+
+语言：中文。无配乐。对白与口型严格同步。保持人物身份、服装、武器、空间结构和屏幕方向稳定；动作连续，不重复起身，不瞬移，不突然改变机位侧别。
 ```
 
-The generation prompt should be a coherent instruction, not a keyword dump. State the subject, action, camera, environment response, and temporal progression in that order.
+The example is instructional. For delivered prompt files, output only the actual prompt body.
 
-## Timed Clip Prompt
+## Local Timing
 
-When a video model consumes a full clip, organize the prompt by explicit intervals:
+Every Clip has an independent local timeline.
+
+Correct:
 
 ```text
-Project-wide style and continuity lock.
-
-00:00-00:03 - Establishing action, framing, camera path, ambience.
-00:03-00:06 - Subject action and environmental response.
-00:06-00:09 - Escalation or reveal, camera adjustment, sound cue.
-00:09-00:12 - Payoff, dialogue or narration, transition setup.
-00:12-00:15 - Closing action, end pose, outgoing match point.
-
-Audio policy:
-Continuity locks:
-Exclusions:
+Clip 01: 0-4秒，4-9秒，9-15秒
+Clip 02: 0-3秒，3-8秒，8-15秒
 ```
 
-Intervals may vary. Their total must equal the requested clip duration, and each interval must be visually achievable.
-
-## Image Asset Prompt
-
-Use this structure for design assets:
+Incorrect:
 
 ```text
-Purpose: reusable production asset, not a storyboard frame.
-Subject: [asset ID and canonical description].
-Views: [front / side / back / detail / state variant / scale comparison].
-Design: silhouette, proportions, materials, palette, functional details.
-Presentation: neutral readable lighting, uncluttered background, consistent scale.
-Style: project global lock.
-Exclusions: no copyrighted names, no extra limbs, no unreadable labels, no random redesign.
+Clip 01: 0-15秒
+Clip 02: 15-30秒
 ```
 
-Use environmental overview, cutaway, material callout, or scale-reference compositions for locations. Use separate images when one sheet would make details too small.
+Requirements:
 
-## Audio Specification
+- first interval starts at 0
+- intervals are ordered, contiguous, and non-overlapping
+- final interval ends at the current Clip duration
+- no interval exceeds the current Clip duration
+- do not use project-global timecodes in copy-ready prompts
 
-Separate five layers:
+## Reference Syntax
 
-1. dialogue
-2. narration
-3. ambience
-4. synchronized effects
-5. music or no-music instruction
+Use the target model's recognizable positional references:
 
-State spoken language and performance intent. When the user requests no generated music, say so in each consolidated clip prompt and preserve ambience and effects. Do not assume the model can generate synchronized audio; mark unsupported layers for post-production.
+- `@图片1` for character, scene, prop, composition, first frame, or style
+- `@视频1` for motion, continuation, camera, rhythm, or last-frame state
+- `@音频1` for timing, voice, ambience, or music reference
 
-## Transition Design
+Assign each reference a clear role in natural instructions:
 
-Choose transitions motivated by shape, movement, light, sound, geography, or narrative cause:
+```text
+@图片1锁定人物外观，@图片2锁定场景结构，以@视频1最后一个稳定画面为动作起点。
+```
 
-- action match
-- graphic or silhouette match
-- light or color match
-- object wipe
-- sound bridge
-- camera pass behind foreground
-- cut on impact or silence
-- dissolve only for time, memory, or tonal continuity
+Do not expose internal filenames, source paths, asset IDs, or upload notes.
 
-Name the outgoing and incoming visual anchors. Avoid using generic cinematic transitions without a continuity reason.
+## Action And Camera Design
 
-## Exclusion Design
+Describe temporal progression, not a static pose.
 
-Use exclusions to prevent concrete failures:
+For each interval specify:
 
-- identity drift, wardrobe drift, architecture drift
-- warped anatomy, duplicated subjects, floating props
-- illegible text, changing logos, random symbols
-- camera teleportation, broken screen direction, scale jumps
-- flicker, texture crawling, over-sharpening, unstable exposure
-- unintended violence, unsafe acts, or protected characters
+- the action phase at the start
+- what physically changes
+- where the subject ends
+- how the environment responds
+- framing, position, and camera movement
+- the information or emotion revealed by the shot
 
-Do not write exclusions as a long fear list. Include only failures relevant to the shot or asset.
+Keep subject and camera motion compatible. Do not combine a complex fight, large orbit, rapid zoom, location change, transformation, and long dialogue in one short interval.
 
-## Asset Registry Rules
+Use action phases to prevent repetition:
 
-- Use stable zero-padded IDs such as `CHR-001`, `LOC-003`, `PRP-012`, `FX-004`.
-- One ID represents one canonical design; variants use suffixes such as `CHR-001-A`.
-- List every asset call in both the shot record and asset manifest.
-- Use only `planned`, `prompt-only`, `generating`, `done`, `deferred`, or `cancelled` as status values.
-- Never mark an item `done` unless the file exists and has been visually inspected.
+```text
+anticipation -> initiation -> travel -> contact -> reaction -> recovery -> consequence
+```
+
+Continue from the inherited phase. Do not restart the action.
+
+## Light And Sound
+
+Light instructions should state useful causes and changes:
+
+- time or practical source
+- direction
+- soft or hard quality
+- warm or cool relationship
+- exposure or contrast change
+- interaction with faces, surfaces, weather, smoke, dust, or effects
+
+Sound instructions should distinguish:
+
+- spoken language, speaker, voice quality, and delivery
+- ambience
+- synchronized movement and impact sounds
+- silence or sound narrowing
+- music, no music, or music behavior
+
+Place sound cues in the time interval where they occur. Do not assume music is required.
+
+## Image Prompt
+
+Image prompts must also be copy-ready and free of production commentary.
+
+Use:
+
+```text
+主体与用途、构图或视图、动作或姿态、外观锚点、材质与色彩、场景与尺度、光线、风格、画幅、必要的失败规避。
+```
+
+For identity sheets, request readable neutral views. For storyboard panels, change pose, action, camera, and composition according to the actual shot while preserving identity.
+
+Do not include internal IDs, filenames, “仅提示词”, “参考图说明”, or asset-management status.
+
+## Forbidden Content
+
+Copy-ready prompt text must not contain:
+
+- `资产引用`
+- `Asset calls`
+- `prompt-only`
+- `REF-001`, `CHR-001`, `LOC-001`, `PRP-001`, `FX-001`, or similar internal IDs
+- `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.mp4`, `.mov`, `.wav`, `.mp3`, `.docx`, or filesystem paths
+- “直接使用用户图”
+- “直接引用”
+- “上图只是”
+- “以下正文保留”
+- “实际生成时必须分别引用”
+- “这是给用户的说明”
+- generation status, packaging notes, explanations, or apologies
+
+Do not disguise these items. Remove them and write the model instruction directly.
+
+## Internal Asset Separation
+
+Internal asset registries may use stable IDs and filenames. Maintain a private mapping from internal assets to upload order:
+
+```json
+{
+  "character_main": "@图片1",
+  "location_hall": "@图片2",
+  "previous_clip": "@视频1"
+}
+```
+
+Only the `@` references and their purposes appear in copy-ready prompts.

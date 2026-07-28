@@ -2,6 +2,8 @@
 
 Use this reference to choose structure and production emphasis. Hybrid projects may combine two patterns, but one format should lead.
 
+For every format, the full structure is a Story Route rather than a prewritten archive of executable video prompts. Direct and write only the current Clip. Inspect its real result before authoring the next Clip.
+
 ## Contents
 
 - Narrative short or scene
@@ -149,4 +151,4 @@ Prioritize geography, cultural contrast, daily life, material culture, transport
 - 60-180 seconds: segment the piece and assign each segment a distinct job.
 - Over 3 minutes: add a scene or chapter map before writing shots.
 
-These are planning heuristics, not platform limits. Verify current platform requirements when they affect delivery.
+These are Story Route heuristics, not instructions to prewrite every Clip. Each generated Clip uses its own local timeline beginning at 0. Verify current platform requirements when they affect delivery.
